@@ -86,7 +86,7 @@ that need this control.
 | `gpc tracks` | List/get/update tracks (internal/alpha/beta/production + custom tracks), rollout percentage, version code assignment |
 | `gpc releases` | Per-locale, per-track release notes; publish a release |
 | `gpc bundles` | Upload AABs (and APKs if needed); list existing bundles |
-| `gpc status` | Review/publication status of an app or an in-progress edit |
+| `gpc status` | Publication status per track (read-only release summaries; the API caps at 20 releases/track). In-progress edits are inspected via `gpc edits get`. |
 
 ## Metadata pull/push workflow
 
@@ -144,7 +144,7 @@ internal/playapi/            # service layer wrapping androidpublisher/v3
 internal/auth/                # service account loading
 internal/metadata/           # file read/write + validation for pull/push/validate
 docs/SETUP.md                # GCP + Play Console auth setup guide
-skills/                      # AI agent skills (gpc-auth-setup, gpc-metadata-sync, gpc-release-flow)
+skillsfs/skills/             # AI agent skills (gpc-auth-setup, gpc-metadata-sync, gpc-release-flow), under skillsfs/ because go:embed cannot reference parent directories
 Makefile                     # build, test, lint
 go.mod
 README.md
