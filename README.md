@@ -131,10 +131,11 @@ These are constraints of the Google Play Developer API itself, not gaps in
   track; older releases fall out of view. For deeper history, inspect a
   specific edit with `gpc edits get`.
 - **Image `pull` is manifest-only.** The API only exposes preview URLs for
-  store images, not downloadable binaries, so `gpc metadata pull` (and
-  `gpc images list`) write a `<type>.manifest.json` per locale/type (id, sha1,
-  URL) instead of the actual image files. Local image files you want to push
-  must be supplied by you — `pull` won't round-trip them.
+  store images, not downloadable binaries, so `gpc metadata pull` writes a
+  `<type>.manifest.json` per locale/type (id, sha1, URL) instead of the actual
+  image files. Similarly, `gpc images list` only returns image ids and preview
+  URLs to stdout and does not write any files. Local image files you want to
+  push must be supplied by you — `pull` won't round-trip them.
 - **`releases publish` replaces the track's whole release list.** `--version-codes`
   is not additive: it must include every version code you want live on that
   track after the call, including ones you want to retain from a previous
