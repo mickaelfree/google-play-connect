@@ -4,14 +4,22 @@
 package cmd
 
 import (
+	"context"
 	"io"
 	"os"
 
 	"github.com/spf13/cobra"
+	androidpublisher "google.golang.org/api/androidpublisher/v3"
+
+	"github.com/mickaelfree/google-play-connect/internal/auth"
+	"github.com/mickaelfree/google-play-connect/internal/playapi"
 )
 
 // Deps carries the injectable seams for the command tree.
 type Deps struct {
+	// NewClient builds an authenticated Play API client. Tests replace it
+	// with a stub pointed at a playapitest server.
+	NewClient func(ctx context.Context, serviceAccountPath string) (*playapi.Client, error)
 	// Stdout receives all rendered command output.
 	Stdout io.Writer
 	// Getenv reads environment variables (credential fallbacks, CI detection).
@@ -29,6 +37,21 @@ func DefaultDeps() Deps {
 	return Deps{
 		Stdout: os.Stdout,
 		Getenv: os.Getenv,
+		NewClient: func(ctx context.Context, serviceAccountPath string) (*playapi.Client, error) {
+			creds, err := auth.ResolveCredentials(auth.Config{ServiceAccountPath: serviceAccountPath}, os.Getenv)
+			if err != nil {
+				return nil, err
+			}
+			opts, err := creds.ClientOptions()
+			if err != nil {
+				return nil, err
+			}
+			svc, err := androidpublisher.NewService(ctx, opts...)
+			if err != nil {
+				return nil, err
+			}
+			return playapi.NewClient(svc), nil
+		},
 	}
 }
 
