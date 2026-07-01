@@ -118,8 +118,9 @@ func subDirs(dir string) ([]string, error) {
 	return names, nil
 }
 
-// LocalImages returns the local image files for a locale + type, sorted by
-// file name. Screenshot types read a directory; single-image types read a
+// LocalImages returns paths to the local image files for a locale + type,
+// sorted by file name. Paths are rooted at root (absolute only if root is
+// absolute). Screenshot types read a directory; single-image types read a
 // flat <type>.png/.jpg file. A missing type returns an empty slice.
 func LocalImages(root, pkg, locale, imageType string) ([]string, error) {
 	base := filepath.Join(AppDir(root, pkg), "images", locale)
