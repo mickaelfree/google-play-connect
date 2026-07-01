@@ -69,6 +69,7 @@ func NewRootCmd(deps Deps) *cobra.Command {
 	root.AddCommand(
 		newAppsCmd(deps, flags),
 		newEditsCmd(deps, flags),
+		newListingsCmd(deps, flags),
 	)
 	return root
 }
