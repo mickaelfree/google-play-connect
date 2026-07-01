@@ -228,3 +228,18 @@ func TestReleasesPublishNotesDir(t *testing.T) {
 		t.Fatalf("execute: %v", err)
 	}
 }
+
+func TestReleasesPublishExplicitZeroRolloutRejected(t *testing.T) {
+	root, _ := newTestRoot(t, http.NewServeMux())
+	root.SetArgs([]string{
+		"releases", "publish",
+		"--app", "com.example.app",
+		"--track", "production",
+		"--version-codes", "42",
+		"--rollout", "0",
+		"--confirm",
+	})
+	if err := root.Execute(); err == nil {
+		t.Fatal("explicit --rollout 0 must be rejected, not silently become a full rollout")
+	}
+}

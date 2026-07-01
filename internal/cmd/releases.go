@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -14,6 +15,11 @@ import (
 	"github.com/mickaelfree/google-play-connect/internal/playapi"
 )
 
+// localePattern matches a plausible BCP-47 language tag shape (e.g. en,
+// en-US, fr-FR), used to keep stray .txt files (e.g. README.txt) from
+// silently becoming a release-notes locale.
+var localePattern = regexp.MustCompile(`^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$`)
+
 // parseNotesFiles turns repeated "locale=path" values into LocalizedText by
 // reading each file's contents.
 func parseNotesFiles(specs []string) ([]*androidpublisher.LocalizedText, error) {
@@ -22,6 +28,9 @@ func parseNotesFiles(specs []string) ([]*androidpublisher.LocalizedText, error) 
 		locale, path, ok := strings.Cut(spec, "=")
 		if !ok {
 			return nil, fmt.Errorf("invalid --notes-file %q: expected locale=path (e.g. en-US=notes/en.txt)", spec)
+		}
+		if locale == "" {
+			return nil, fmt.Errorf("invalid --notes-file %q: empty locale", spec)
 		}
 		data, err := os.ReadFile(path)
 		if err != nil {
@@ -44,6 +53,12 @@ func notesFromDir(dir string) ([]*androidpublisher.LocalizedText, error) {
 			continue
 		}
 		locale := strings.TrimSuffix(e.Name(), ".txt")
+		if locale == "" {
+			continue
+		}
+		if !localePattern.MatchString(locale) {
+			return nil, fmt.Errorf("notes dir %s: %q does not look like a locale (expected BCP-47 form, e.g. en-US.txt)", dir, e.Name())
+		}
 		data, readErr := os.ReadFile(filepath.Join(dir, e.Name()))
 		if readErr != nil {
 			return nil, fmt.Errorf("read notes file %s: %w", e.Name(), readErr)
@@ -73,9 +88,7 @@ func newReleasesCmd(deps Deps, flags *RootFlags) *cobra.Command {
 			if err := RequireConfirm(confirm, deps.Getenv, "publish release"); err != nil {
 				return err
 			}
-			// rollout == 0 means "not set" (full rollout); anything else must
-			// be a valid staged fraction.
-			if rollout != 0 && (rollout <= 0 || rollout >= 1) {
+			if cmd.Flags().Changed("rollout") && (rollout <= 0 || rollout >= 1) {
 				return fmt.Errorf("--rollout must be strictly between 0 and 1, got %v", rollout)
 			}
 			var notes []*androidpublisher.LocalizedText
@@ -129,6 +142,9 @@ func newReleasesCmd(deps Deps, flags *RootFlags) *cobra.Command {
 			return renderResult(deps, flags, updated,
 				[]string{"TRACK", "STATUS", "VERSION_CODES"},
 				func() [][]string {
+					if len(updated.Releases) == 0 {
+						return [][]string{{updated.Track, "-", "-"}}
+					}
 					r := updated.Releases[0]
 					return [][]string{{updated.Track, r.Status, fmt.Sprint([]int64(r.VersionCodes))}}
 				})

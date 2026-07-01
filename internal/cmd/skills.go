@@ -57,7 +57,10 @@ func newInstallSkillsCmd(deps Deps, flags *RootFlags) *cobra.Command {
 				})
 		},
 	}
-	home, _ := os.UserHomeDir()
+	home, err := os.UserHomeDir()
+	if err != nil {
+		home = "."
+	}
 	installCmd.Flags().StringVar(&dir, "dir", filepath.Join(home, ".claude", "skills"), "skills directory to install into")
 	return installCmd
 }

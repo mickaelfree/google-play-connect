@@ -40,7 +40,7 @@ func newEditsCmd(deps Deps, flags *RootFlags) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return renderResult(deps, flags, edit, []string{"EDIT_ID", "EXPIRES_IN_S"}, func() [][]string {
+			return renderResult(deps, flags, edit, []string{"EDIT_ID", "EXPIRY_EPOCH_S"}, func() [][]string {
 				return [][]string{{edit.Id, edit.ExpiryTimeSeconds}}
 			})
 		},
@@ -96,7 +96,7 @@ func newEditsCmd(deps Deps, flags *RootFlags) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return renderResult(deps, flags, edit, []string{"EDIT_ID", "EXPIRES_IN_S"}, func() [][]string {
+			return renderResult(deps, flags, edit, []string{"EDIT_ID", "EXPIRY_EPOCH_S"}, func() [][]string {
 				return [][]string{{edit.Id, edit.ExpiryTimeSeconds}}
 			})
 		},

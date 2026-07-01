@@ -131,6 +131,9 @@ func newTracksCmd(deps Deps, flags *RootFlags) *cobra.Command {
 			return renderResult(deps, flags, updated,
 				[]string{"TRACK", "STATUS", "ROLLOUT"},
 				func() [][]string {
+					if len(updated.Releases) == 0 {
+						return [][]string{{updated.Track, "-", "-"}}
+					}
 					r := updated.Releases[0]
 					return [][]string{{updated.Track, r.Status, fmt.Sprint(r.UserFraction)}}
 				})
