@@ -76,6 +76,7 @@ func NewRootCmd(deps Deps) *cobra.Command {
 		newBundlesCmd(deps, flags),
 		newStatusCmd(deps, flags),
 		newMetadataCmd(deps, flags),
+		newInstallSkillsCmd(deps, flags),
 	)
 	return root
 }
