@@ -73,6 +73,8 @@ func NewRootCmd(deps Deps) *cobra.Command {
 		newImagesCmd(deps, flags),
 		newTracksCmd(deps, flags),
 		newReleasesCmd(deps, flags),
+		newBundlesCmd(deps, flags),
+		newStatusCmd(deps, flags),
 	)
 	return root
 }
