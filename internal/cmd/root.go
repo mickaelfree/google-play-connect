@@ -70,6 +70,7 @@ func NewRootCmd(deps Deps) *cobra.Command {
 		newAppsCmd(deps, flags),
 		newEditsCmd(deps, flags),
 		newListingsCmd(deps, flags),
+		newImagesCmd(deps, flags),
 	)
 	return root
 }
