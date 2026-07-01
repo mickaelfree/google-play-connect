@@ -68,9 +68,18 @@ that need this control.
 
 ## Command groups (v1)
 
+> **Amendment (2026-07-01, verified against SDK v0.287.0 source):** the
+> Android Publisher API has **no endpoint to list the apps of an account**, so
+> `gpc apps` is `apps details` (AppDetails via an ephemeral read-only edit)
+> rather than `apps list`. Release notes belong to track releases in the API,
+> not the store listing — they are handled by `gpc releases publish
+> --notes-dir/--notes-file`, not by `metadata pull/push`. Image `pull` writes
+> per-type `manifest.json` files (ids/sha1/urls) instead of downloading
+> binaries, because the API only exposes preview URLs.
+
 | Group | Purpose |
 |---|---|
-| `gpc apps` | List/get apps linked to the account; resolve by package name |
+| `gpc apps` | App details (default language, contacts) — no list endpoint exists in the API |
 | `gpc edits` | Low-level transaction control: `begin`, `commit`, `discard` |
 | `gpc listings` | Get/update per-locale store listing (title, short/full description, video URL); `pull`/`push` to local files |
 | `gpc images` | List/upload/delete store assets per locale and type (phone/tablet/tv/wear screenshots, icon, feature graphic, promo graphic) |
