@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -31,6 +32,27 @@ func parseNotesFiles(specs []string) ([]*androidpublisher.LocalizedText, error) 
 	return notes, nil
 }
 
+// notesFromDir reads every <locale>.txt file in dir as release notes.
+func notesFromDir(dir string) ([]*androidpublisher.LocalizedText, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, fmt.Errorf("read notes dir %s: %w", dir, err)
+	}
+	var notes []*androidpublisher.LocalizedText
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".txt") {
+			continue
+		}
+		locale := strings.TrimSuffix(e.Name(), ".txt")
+		data, readErr := os.ReadFile(filepath.Join(dir, e.Name()))
+		if readErr != nil {
+			return nil, fmt.Errorf("read notes file %s: %w", e.Name(), readErr)
+		}
+		notes = append(notes, &androidpublisher.LocalizedText{Language: locale, Text: strings.TrimSpace(string(data))})
+	}
+	return notes, nil
+}
+
 func newReleasesCmd(deps Deps, flags *RootFlags) *cobra.Command {
 	releasesCmd := &cobra.Command{
 		Use:   "releases",
@@ -40,6 +62,7 @@ func newReleasesCmd(deps Deps, flags *RootFlags) *cobra.Command {
 	var app, editID, track, releaseName string
 	var versionCodes []int64
 	var rollout float64
+	var notesDir string
 	var notesFiles []string
 	var confirm bool
 
@@ -55,9 +78,20 @@ func newReleasesCmd(deps Deps, flags *RootFlags) *cobra.Command {
 			if rollout != 0 && (rollout <= 0 || rollout >= 1) {
 				return fmt.Errorf("--rollout must be strictly between 0 and 1, got %v", rollout)
 			}
-			notes, err := parseNotesFiles(notesFiles)
+			var notes []*androidpublisher.LocalizedText
+			if notesDir != "" {
+				dirNotes, dirErr := notesFromDir(notesDir)
+				if dirErr != nil {
+					return dirErr
+				}
+				notes = dirNotes
+			}
+			fileNotes, err := parseNotesFiles(notesFiles)
 			if err != nil {
 				return err
+			}
+			for _, n := range fileNotes {
+				notes = playapi.UpsertReleaseNotes(notes, n.Language, n.Text)
 			}
 
 			status := playapi.ReleaseStatusCompleted
@@ -108,6 +142,7 @@ func newReleasesCmd(deps Deps, flags *RootFlags) *cobra.Command {
 	_ = publish.MarkFlagRequired("version-codes")
 	publish.Flags().StringVar(&releaseName, "name", "", "release name (defaults to version name server-side)")
 	publish.Flags().Float64Var(&rollout, "rollout", 0, "staged rollout fraction (0 < f < 1); omit for full rollout")
+	publish.Flags().StringVar(&notesDir, "notes-dir", "", "directory of <locale>.txt release notes (e.g. metadata/com.app/release_notes)")
 	publish.Flags().StringArrayVar(&notesFiles, "notes-file", nil, "release notes as locale=path, repeatable")
 	publish.Flags().StringVar(&editID, "edit-id", "", "reuse an existing edit transaction (no auto-commit)")
 	publish.Flags().BoolVar(&confirm, "confirm", false, "confirm publishing")

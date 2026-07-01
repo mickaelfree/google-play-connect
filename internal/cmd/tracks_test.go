@@ -188,3 +188,43 @@ func TestReleasesPublishRolloutSetsInProgress(t *testing.T) {
 		t.Fatalf("execute: %v", err)
 	}
 }
+
+func TestReleasesPublishNotesDir(t *testing.T) {
+	notesDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(notesDir, "en-US.txt"), []byte("EN notes"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(notesDir, "fr-FR.txt"), []byte("Notes FR"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/edits", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(androidpublisher.AppEdit{Id: "tx"})
+	})
+	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/edits/tx/tracks/beta", func(w http.ResponseWriter, r *http.Request) {
+		var body androidpublisher.Track
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		notes := body.Releases[0].ReleaseNotes
+		if len(notes) != 2 {
+			t.Errorf("want 2 locales of notes, got %+v", notes)
+		}
+		json.NewEncoder(w).Encode(body)
+	})
+	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/edits/tx:commit", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(androidpublisher.AppEdit{Id: "tx"})
+	})
+
+	root, _ := newTestRoot(t, mux)
+	root.SetArgs([]string{
+		"releases", "publish",
+		"--app", "com.example.app",
+		"--track", "beta",
+		"--version-codes", "42",
+		"--notes-dir", notesDir,
+		"--confirm",
+	})
+	if err := root.Execute(); err != nil {
+		t.Fatalf("execute: %v", err)
+	}
+}
