@@ -66,8 +66,10 @@ func NewRootCmd(deps Deps) *cobra.Command {
 	}
 	root.PersistentFlags().StringVar(&flags.ServiceAccount, "service-account", "", "path to the service account JSON key")
 	root.PersistentFlags().StringVar(&flags.Output, "output", "", "output format: json or table (default: json, table on a TTY)")
-	// Subcommands are attached here by later tasks:
-	// root.AddCommand(newAppsCmd(deps, flags), newEditsCmd(deps, flags), ...)
+	root.AddCommand(
+		newAppsCmd(deps, flags),
+		newEditsCmd(deps, flags),
+	)
 	return root
 }
 
