@@ -98,7 +98,9 @@ method fits the context:
 
 If none is set, every command fails fast with:
 `no service account credentials found: set --service-account,
-GPC_SERVICE_ACCOUNT_KEY_PATH, or GPC_SERVICE_ACCOUNT_KEY_JSON`.
+GPC_SERVICE_ACCOUNT_KEY_PATH, or GPC_SERVICE_ACCOUNT_KEY_JSON (see docs/SETUP.md
+or https://github.com/mickaelfree/google-play-connect/blob/master/docs/SETUP.md
+to create one)`.
 
 ### Method 1: `--service-account` flag
 

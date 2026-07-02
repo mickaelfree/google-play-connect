@@ -22,7 +22,7 @@ type Credentials struct {
 }
 
 // ErrNoCredentials is returned when no credential source is configured.
-var ErrNoCredentials = errors.New("no service account credentials found: set --service-account, GPC_SERVICE_ACCOUNT_KEY_PATH, or GPC_SERVICE_ACCOUNT_KEY_JSON")
+var ErrNoCredentials = errors.New("no service account credentials found: set --service-account, GPC_SERVICE_ACCOUNT_KEY_PATH, or GPC_SERVICE_ACCOUNT_KEY_JSON (see docs/SETUP.md or https://github.com/mickaelfree/google-play-connect/blob/master/docs/SETUP.md to create one)")
 
 // ResolveCredentials picks a credential source in priority order:
 //  1. cfg.ServiceAccountPath (the --service-account flag)

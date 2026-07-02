@@ -329,6 +329,7 @@ code, pre { font-family: var(--font-mono); }
 .cmd:focus-within::after { opacity: 1; }
 
 .cmd pre {
+  position: relative;
   flex: 1;
   min-width: 0;
   overflow-x: auto;
@@ -336,6 +337,17 @@ code, pre { font-family: var(--font-mono); }
   font-size: 0.85rem;
   line-height: 1.5;
   white-space: pre;
+}
+/* Right-edge fade hints that the command scrolls horizontally. */
+.cmd pre::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 28px;
+  background: linear-gradient(to right, transparent, var(--color-terminal));
+  pointer-events: none;
 }
 .cmd--prompt pre code::before {
   content: "$ ";
@@ -524,6 +536,7 @@ h2 {
 }
 
 .card-cmd {
+  position: relative;
   min-width: 0;
   overflow-x: auto;
   padding: 0.7rem 0.85rem;
@@ -533,6 +546,18 @@ h2 {
   border: 1px solid var(--color-border);
   border-radius: 7px;
   white-space: pre;
+}
+/* Right-edge fade hints that the command scrolls horizontally. */
+.card-cmd::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 28px;
+  background: linear-gradient(to right, transparent, var(--color-terminal));
+  pointer-events: none;
+  border-radius: 0 7px 7px 0;
 }
 
 /* --------------------------------------------------------------------------
