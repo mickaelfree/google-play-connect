@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"slices"
 
 	"github.com/spf13/cobra"
 
@@ -19,7 +21,7 @@ func newMetadataCmd(deps Deps, flags *RootFlags) *cobra.Command {
 	}
 
 	var app, dir, editID string
-	var confirm bool
+	var confirm, prune bool
 
 	pull := &cobra.Command{
 		Use:   "pull",
@@ -30,6 +32,10 @@ func newMetadataCmd(deps Deps, flags *RootFlags) *cobra.Command {
 				return err
 			}
 			var pulledLocales []string
+			// writtenManifests tracks which locale/imageType manifests this
+			// pull (re)wrote, so --prune only removes manifests it did not
+			// touch (i.e. ones that no longer exist remotely).
+			writtenManifests := map[string]map[string]bool{}
 			err = client.WithReadOnlyEdit(cmd.Context(), app, func(id string) error {
 				listings, inner := client.ListListings(cmd.Context(), app, id)
 				if inner != nil {
@@ -60,6 +66,10 @@ func newMetadataCmd(deps Deps, flags *RootFlags) *cobra.Command {
 						if mErr := metadata.WriteImageManifest(dir, app, l.Language, imageType, entries); mErr != nil {
 							return mErr
 						}
+						if writtenManifests[l.Language] == nil {
+							writtenManifests[l.Language] = map[string]bool{}
+						}
+						writtenManifests[l.Language][imageType] = true
 					}
 				}
 				return nil
@@ -67,7 +77,14 @@ func newMetadataCmd(deps Deps, flags *RootFlags) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return renderResult(deps, flags, map[string]any{"pulled": pulledLocales, "dir": dir},
+			prunedPaths := []string{}
+			if prune {
+				prunedPaths, err = pruneStaleMetadata(dir, app, pulledLocales, writtenManifests)
+				if err != nil {
+					return err
+				}
+			}
+			return renderResult(deps, flags, map[string]any{"pulled": pulledLocales, "dir": dir, "pruned": prunedPaths},
 				[]string{"LOCALE"},
 				func() [][]string {
 					rows := make([][]string, 0, len(pulledLocales))
@@ -78,6 +95,7 @@ func newMetadataCmd(deps Deps, flags *RootFlags) *cobra.Command {
 				})
 		},
 	}
+	pull.Flags().BoolVar(&prune, "prune", false, "delete local listing locales and image manifests that no longer exist remotely (local image files are never touched)")
 
 	push := &cobra.Command{
 		Use:   "push",
@@ -204,4 +222,49 @@ func newMetadataCmd(deps Deps, flags *RootFlags) *cobra.Command {
 
 	metadataCmd.AddCommand(pull, push, validate)
 	return metadataCmd
+}
+
+// pruneStaleMetadata removes local listing locale directories and image
+// manifests that this pull did not (re)write, i.e. no longer exist remotely.
+// It never touches image files or image directories. Returned paths are
+// relative to dir.
+func pruneStaleMetadata(dir, app string, pulledLocales []string, writtenManifests map[string]map[string]bool) ([]string, error) {
+	pruned := []string{}
+
+	localListingLocales, err := metadata.ListingLocales(dir, app)
+	if err != nil {
+		return nil, err
+	}
+	for _, locale := range localListingLocales {
+		if slices.Contains(pulledLocales, locale) {
+			continue
+		}
+		listingDir := filepath.Join(metadata.AppDir(dir, app), "listings", locale)
+		if rmErr := os.RemoveAll(listingDir); rmErr != nil {
+			return nil, fmt.Errorf("prune %s: %w", listingDir, rmErr)
+		}
+		pruned = append(pruned, filepath.Join(app, "listings", locale))
+	}
+
+	localImageLocales, err := metadata.ImageLocales(dir, app)
+	if err != nil {
+		return nil, err
+	}
+	for _, locale := range localImageLocales {
+		for _, imageType := range playapi.AllImageTypes {
+			manifestPath := filepath.Join(metadata.AppDir(dir, app), "images", locale, imageType+".manifest.json")
+			if _, statErr := os.Stat(manifestPath); statErr != nil {
+				continue
+			}
+			if writtenManifests[locale][imageType] {
+				continue
+			}
+			if rmErr := os.Remove(manifestPath); rmErr != nil {
+				return nil, fmt.Errorf("prune %s: %w", manifestPath, rmErr)
+			}
+			pruned = append(pruned, filepath.Join(app, "images", locale, imageType+".manifest.json"))
+		}
+	}
+
+	return pruned, nil
 }
