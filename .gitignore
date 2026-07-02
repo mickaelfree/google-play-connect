@@ -1,0 +1,14 @@
+.superpowers/
+
+# binaries
+/gpc
+/dist/
+
+# credentials — never commit service account keys
+secrets/
+*-service-account.json
+*service_account*.json
+
+# editor/tooling
+.idea/
+*.tsbuildinfo
