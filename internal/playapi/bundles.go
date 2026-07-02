@@ -6,6 +6,7 @@ import (
 	"io"
 
 	androidpublisher "google.golang.org/api/androidpublisher/v3"
+	"google.golang.org/api/googleapi"
 )
 
 // ListBundles returns the AABs already attached to the edit.
@@ -20,7 +21,12 @@ func (c *Client) ListBundles(ctx context.Context, packageName, editID string) ([
 // UploadBundle uploads an .aab (bytes from r) into the edit. Google computes
 // and returns the version code and hashes server-side.
 func (c *Client) UploadBundle(ctx context.Context, packageName, editID string, r io.Reader) (*androidpublisher.Bundle, error) {
-	bundle, err := c.svc.Edits.Bundles.Upload(packageName, editID).Media(r).Context(ctx).Do()
+	// An .aab is a zip archive, so the client sniffs it as application/zip,
+	// which the bundles.upload endpoint rejects — it only accepts
+	// application/octet-stream.
+	bundle, err := c.svc.Edits.Bundles.Upload(packageName, editID).
+		Media(r, googleapi.ContentType("application/octet-stream")).
+		Context(ctx).Do()
 	if err != nil {
 		return nil, fmt.Errorf("upload bundle for %s edit %s: %w", packageName, editID, err)
 	}
