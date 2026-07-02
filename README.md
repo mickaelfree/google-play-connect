@@ -77,7 +77,7 @@ JSON is the default when stdout isn't a terminal, table when it is.
 | `gpc bundles` | `list`, `upload` — Android App Bundles (`.aab`). |
 | `gpc status` | Read-only release summaries per track — no edit transaction involved. |
 | `gpc metadata` | `pull`/`push`/`validate` — offline editing of the whole listing + image tree in one shot. |
-| `gpc install-skills` | Installs gpc's 3 bundled AI agent skills into a skills directory. |
+| `gpc install-skills` | Installs gpc's 4 bundled AI agent skills into a skills directory. |
 
 Run `gpc <group> --help` or `gpc <group> <command> --help` for the full flag
 list of any command.
@@ -105,9 +105,10 @@ instead of `commit` to throw away the whole batch.
 
 ## AI agent skills
 
-`gpc` ships 3 [Claude Code skills](https://docs.claude.com/en/docs/claude-code)
-embedded in the binary, covering auth setup, metadata sync, and the release
-flow above. Install them with:
+`gpc` ships 4 [Claude Code skills](https://docs.claude.com/en/docs/claude-code)
+embedded in the binary, covering general CLI usage (flag conventions, output
+formats, the edit-transaction model), auth setup, metadata sync, and the
+release flow above. Install them with:
 
 ```bash
 gpc install-skills --dir ~/.claude/skills

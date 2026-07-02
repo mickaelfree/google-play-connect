@@ -44,7 +44,7 @@
         <path d="M140 130 L310 212 L140 300 Z" fill="none" stroke="#3ddc84" stroke-opacity="0.1" stroke-width="1" stroke-linejoin="round"/>
       </svg>
       <div class="container hero-inner">
-        <p class="chip chip--hero">v0.2.0 — open source</p>
+        <p class="chip chip--hero">v0.2.1 — open source</p>
         <h1 id="hero-heading">Automate Google Play Console</h1>
         <p class="hero-sub">Ship from your terminal in minutes</p>
         <p class="hero-lede">A fast, scriptable CLI for the Google Play Developer API. Publish releases, manage store listings and screenshots across every locale, upload app bundles, and run repeatable release flows — from one Go binary, built for humans, CI, and coding agents.</p>
@@ -208,8 +208,12 @@ gpc edits commit --app com.example.app --edit-id "$EDIT"</code></pre>
         <span class="section-index" aria-hidden="true">03</span>
         <h2 id="skills-heading">AI agent skills, built in</h2>
       </header>
-      <p class="section-lede">gpc ships three skills that teach coding agents (Claude, Cursor, Codex…) how to set up credentials, sync store listings, and run releases — installed into your agent's skills directory with one command.</p>
+      <p class="section-lede">gpc ships four skills that teach coding agents (Claude, Cursor, Codex…) how to drive the CLI, set up credentials, sync store listings, and run releases — installed into your agent's skills directory with one command.</p>
       <div class="skills-grid">
+        <article class="card card--skill" tabindex="0">
+          <h3 class="skill-name">gpc-cli-usage</h3>
+          <p>The general playbook: command discovery via --help, flag conventions, TTY-aware output, the edit-transaction model, and API limits to remember.</p>
+        </article>
         <article class="card card--skill" tabindex="0">
           <h3 class="skill-name">gpc-auth-setup</h3>
           <p>Walks the agent through creating the GCP service account, enabling the Android Publisher API, and wiring credentials.</p>

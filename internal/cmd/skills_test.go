@@ -14,7 +14,7 @@ func TestInstallSkillsWritesSkillDirs(t *testing.T) {
 	if err := root.Execute(); err != nil {
 		t.Fatalf("execute: %v", err)
 	}
-	for _, name := range []string{"gpc-auth-setup", "gpc-metadata-sync", "gpc-release-flow"} {
+	for _, name := range []string{"gpc-cli-usage", "gpc-auth-setup", "gpc-metadata-sync", "gpc-release-flow"} {
 		path := filepath.Join(target, name, "SKILL.md")
 		data, err := os.ReadFile(path)
 		if err != nil {
