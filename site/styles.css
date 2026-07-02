@@ -20,7 +20,7 @@
   --color-ink-on-accent: #06130b;   /* text on solid accent (~10.5:1) */
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
-  --text-hero: clamp(2.4rem, 1.2rem + 5.4vw, 5rem);
+  --text-hero: clamp(3rem, 1.2rem + 5.4vw, 5rem);
   --text-h2: clamp(1.6rem, 1.2rem + 1.8vw, 2.5rem);
   --space-section: clamp(4rem, 3rem + 5vw, 9rem);
   --space-card-gap: 1rem;           /* grid gap ≠ card padding, on purpose */
@@ -491,6 +491,7 @@ h2 {
   transition: transform var(--duration) var(--ease-out);
 }
 .card:hover,
+.card:focus-visible,
 .card:focus-within {
   border-color: var(--color-border-bright);
   transform: translateY(-3px);
@@ -507,6 +508,7 @@ h2 {
   pointer-events: none;
 }
 .card:hover::after,
+.card:focus-visible::after,
 .card:focus-within::after { opacity: 1; }
 
 .card h3 {

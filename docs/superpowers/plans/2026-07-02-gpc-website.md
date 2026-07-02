@@ -145,7 +145,7 @@ gpc edits commit --app com.example.app --edit-id "$EDIT"
   --color-accent: /* Play green */;
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
-  --text-hero: clamp(2.4rem, 1.2rem + 5.4vw, 5rem);
+  --text-hero: clamp(3rem, 1.2rem + 5.4vw, 5rem);
   --space-section: clamp(4rem, 3rem + 5vw, 9rem);
   --radius-card: /* one consistent card radius */;
   --duration: 200ms;
