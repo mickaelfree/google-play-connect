@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>gpc — Automate Google Play Console from your terminal</title>
+  <meta name="description" content="A fast, scriptable CLI for the Google Play Developer API. Publish releases, manage store listings and screenshots across every locale, upload app bundles, and run repeatable release flows — from one Go binary.">
+  <meta name="theme-color" content="#0a0d0b">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%233ddc84' d='M6 3.2v17.6L20.4 12z'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body id="top">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <nav class="nav container" aria-label="Main navigation">
+      <a class="wordmark" href="#top">gpc<span class="wordmark-cursor" aria-hidden="true">_</span></a>
+      <span class="chip chip--nav">Google Play Connect</span>
+      <ul class="nav-links" role="list">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#transactions">Transactions</a></li>
+        <li><a href="#skills">Skills</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+      <a class="nav-github" href="https://github.com/mickaelfree/google-play-connect" aria-label="gpc on GitHub">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+      </a>
+    </nav>
+  </header>
+
+  <main id="main">
+
+    <!-- Hero -->
+    <section class="hero" aria-labelledby="hero-heading">
+      <svg class="hero-motif" viewBox="0 0 420 420" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="tri-fill" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#3ddc84" stop-opacity="0.14"/>
+            <stop offset="1" stop-color="#3ddc84" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="M110 60 L350 210 L110 360 Z" fill="url(#tri-fill)" stroke="#3ddc84" stroke-opacity="0.5" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M90 90 L290 215 L90 340 Z" fill="none" stroke="#3ddc84" stroke-opacity="0.22" stroke-width="1" stroke-linejoin="round"/>
+        <path d="M140 130 L310 212 L140 300 Z" fill="none" stroke="#3ddc84" stroke-opacity="0.1" stroke-width="1" stroke-linejoin="round"/>
+      </svg>
+      <div class="container hero-inner">
+        <p class="chip chip--hero">v0.1.0 — open source</p>
+        <h1 id="hero-heading">Automate Google Play Console</h1>
+        <p class="hero-sub">Ship from your terminal in minutes</p>
+        <p class="hero-lede">A fast, scriptable CLI for the Google Play Developer API. Publish releases, manage store listings and screenshots across every locale, upload app bundles, and run repeatable release flows — from one Go binary, built for humans, CI, and coding agents.</p>
+        <div class="cmd-stack">
+          <div class="cmd cmd--prompt">
+            <pre tabindex="0"><code id="cmd-install-go">go install github.com/mickaelfree/google-play-connect/cmd/gpc@latest</code></pre>
+            <button class="copy-btn" type="button" data-copy="go install github.com/mickaelfree/google-play-connect/cmd/gpc@latest" data-copy-target="#cmd-install-go">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="5.5" y="5.5" width="9" height="9" rx="1.5"/><path d="M10.5 3.5v-1a1.5 1.5 0 0 0-1.5-1.5H3A1.5 1.5 0 0 0 1.5 2.5v6A1.5 1.5 0 0 0 3 10h1"/></svg>
+              <span class="copy-label">Copy</span>
+            </button>
+          </div>
+          <div class="cmd cmd--prompt">
+            <pre tabindex="0"><code id="cmd-install-src">git clone https://github.com/mickaelfree/google-play-connect &amp;&amp; cd google-play-connect &amp;&amp; make build</code></pre>
+            <button class="copy-btn" type="button" data-copy="git clone https://github.com/mickaelfree/google-play-connect &amp;&amp; cd google-play-connect &amp;&amp; make build" data-copy-target="#cmd-install-src">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="5.5" y="5.5" width="9" height="9" rx="1.5"/><path d="M10.5 3.5v-1a1.5 1.5 0 0 0-1.5-1.5H3A1.5 1.5 0 0 0 1.5 2.5v6A1.5 1.5 0 0 0 3 10h1"/></svg>
+              <span class="copy-label">Copy</span>
+            </button>
+          </div>
+        </div>
+        <ul class="stats" role="list">
+          <li class="stat"><span class="stat-value">10</span><span class="stat-label">command groups</span></li>
+          <li class="stat"><span class="stat-value">40+</span><span class="stat-label">behavior tests</span></li>
+          <li class="stat"><span class="stat-value">3</span><span class="stat-label">agent skills</span></li>
+          <li class="stat"><span class="stat-value">1</span><span class="stat-label">single binary</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="section container" id="features" aria-labelledby="features-heading">
+      <header class="section-head">
+        <span class="section-index" aria-hidden="true">01</span>
+        <h2 id="features-heading">Everything you can automate with gpc</h2>
+      </header>
+      <div class="features-grid">
+        <article class="card">
+          <h3>Store listings</h3>
+          <p>Pull, edit, validate and push titles and descriptions across every locale — updates merge with what's live, so setting a title never blanks a description.</p>
+          <ul class="chip-row" role="list">
+            <li class="chip chip--tag">Listings</li>
+            <li class="chip chip--tag">Locales</li>
+            <li class="chip chip--tag">Merge-safe</li>
+          </ul>
+          <pre class="card-cmd" tabindex="0"><code>gpc listings update --app com.example.app --locale fr-FR --title "Mon App"</code></pre>
+        </article>
+        <article class="card">
+          <h3>Screenshots &amp; store media</h3>
+          <p>Upload phone, tablet, TV and Wear screenshots, icons and feature graphics per locale — validated before a single byte hits the API.</p>
+          <ul class="chip-row" role="list">
+            <li class="chip chip--tag">Screenshots</li>
+            <li class="chip chip--tag">Icons</li>
+            <li class="chip chip--tag">Validation</li>
+          </ul>
+          <pre class="card-cmd" tabindex="0"><code>gpc images upload --app com.example.app --locale en-US --type phoneScreenshots shots/1.png</code></pre>
+        </article>
+        <article class="card">
+          <h3>Metadata as files</h3>
+          <p>Your whole store listing as a folder of text files and images: pull it, edit offline, validate limits (30/80/4000 chars, image dimensions), push atomically.</p>
+          <ul class="chip-row" role="list">
+            <li class="chip chip--tag">Pull/Push</li>
+            <li class="chip chip--tag">Offline</li>
+            <li class="chip chip--tag">Atomic</li>
+          </ul>
+          <pre class="card-cmd" tabindex="0"><code>gpc metadata pull --app com.example.app --dir ./metadata</code></pre>
+        </article>
+        <article class="card">
+          <h3>Releases &amp; staged rollouts</h3>
+          <p>Publish version codes to any track with per-locale release notes, start a 25% staged rollout and grow it — with a --confirm gate on everything destructive.</p>
+          <ul class="chip-row" role="list">
+            <li class="chip chip--tag">Publish</li>
+            <li class="chip chip--tag">Rollout</li>
+            <li class="chip chip--tag">Notes</li>
+          </ul>
+          <pre class="card-cmd" tabindex="0"><code>gpc releases publish --app com.example.app --track production --version-codes 42 --rollout 0.25 --confirm</code></pre>
+        </article>
+        <article class="card">
+          <h3>App bundles</h3>
+          <p>Upload .aab files straight into an edit and list what's already there — Google computes version codes and hashes server-side.</p>
+          <ul class="chip-row" role="list">
+            <li class="chip chip--tag">AAB</li>
+            <li class="chip chip--tag">Upload</li>
+          </ul>
+          <pre class="card-cmd" tabindex="0"><code>gpc bundles upload --app com.example.app --file app-release.aab</code></pre>
+        </article>
+        <article class="card">
+          <h3>Tracks</h3>
+          <p>Inspect internal, alpha, beta, production and custom tracks; patch an in-progress release's rollout fraction or halt it.</p>
+          <ul class="chip-row" role="list">
+            <li class="chip chip--tag">Tracks</li>
+            <li class="chip chip--tag">Rollout</li>
+            <li class="chip chip--tag">Halt</li>
+          </ul>
+          <pre class="card-cmd" tabindex="0"><code>gpc tracks update --app com.example.app --track production --rollout 0.5 --confirm</code></pre>
+        </article>
+        <article class="card">
+          <h3>Release status</h3>
+          <p>Read-only view of what's live on every track — no edit transaction, safe to run anywhere, JSON by default for scripts and agents.</p>
+          <ul class="chip-row" role="list">
+            <li class="chip chip--tag">Status</li>
+            <li class="chip chip--tag">Read-only</li>
+            <li class="chip chip--tag">JSON</li>
+          </ul>
+          <pre class="card-cmd" tabindex="0"><code>gpc status --app com.example.app</code></pre>
+        </article>
+        <article class="card">
+          <h3>Edit transactions</h3>
+          <p>Batch listings, images, bundles and a release into ONE atomic commit with --edit-id — or let each command manage its own transaction.</p>
+          <ul class="chip-row" role="list">
+            <li class="chip chip--tag">Atomic</li>
+            <li class="chip chip--tag">Batching</li>
+          </ul>
+          <pre class="card-cmd" tabindex="0"><code>gpc edits begin --app com.example.app</code></pre>
+        </article>
+        <article class="card">
+          <h3>App details</h3>
+          <p>Default language and contact info, fetched through an ephemeral read-only edit that is always discarded.</p>
+          <ul class="chip-row" role="list">
+            <li class="chip chip--tag">Details</li>
+            <li class="chip chip--tag">Read-only</li>
+          </ul>
+          <pre class="card-cmd" tabindex="0"><code>gpc apps details --app com.example.app</code></pre>
+        </article>
+        <article class="card">
+          <h3>Agent skills</h3>
+          <p>Three built-in skills teach coding agents the full workflow: auth setup, metadata sync, release flow. One command installs them.</p>
+          <ul class="chip-row" role="list">
+            <li class="chip chip--tag">AI agents</li>
+            <li class="chip chip--tag">Skills</li>
+          </ul>
+          <pre class="card-cmd" tabindex="0"><code>gpc install-skills</code></pre>
+        </article>
+      </div>
+    </section>
+
+    <!-- Transactions -->
+    <section class="section container" id="transactions" aria-labelledby="transactions-heading">
+      <header class="section-head">
+        <span class="section-index" aria-hidden="true">02</span>
+        <h2 id="transactions-heading">One commit. Everything ships together.</h2>
+      </header>
+      <p class="section-lede">The Google Play API applies changes inside an edit transaction. gpc manages that for you — every command begins, commits or discards its own edit — and when you need real atomicity, share one transaction across commands:</p>
+      <figure class="terminal">
+        <figcaption class="terminal-bar">
+          <span class="terminal-title">sh</span>
+          <button class="copy-btn" type="button" data-copy="EDIT=$(gpc edits begin --app com.example.app | jq -r .id)&#10;gpc bundles upload --app com.example.app --file app.aab --edit-id &quot;$EDIT&quot;&#10;gpc releases publish --app com.example.app --track beta \&#10;  --version-codes 42 --edit-id &quot;$EDIT&quot; --confirm&#10;gpc edits commit --app com.example.app --edit-id &quot;$EDIT&quot;" data-copy-target="#cmd-batch">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="5.5" y="5.5" width="9" height="9" rx="1.5"/><path d="M10.5 3.5v-1a1.5 1.5 0 0 0-1.5-1.5H3A1.5 1.5 0 0 0 1.5 2.5v6A1.5 1.5 0 0 0 3 10h1"/></svg>
+            <span class="copy-label">Copy</span>
+          </button>
+        </figcaption>
+        <pre tabindex="0"><code id="cmd-batch">EDIT=$(gpc edits begin --app com.example.app | jq -r .id)
+gpc bundles upload --app com.example.app --file app.aab --edit-id "$EDIT"
+gpc releases publish --app com.example.app --track beta \
+  --version-codes 42 --edit-id "$EDIT" --confirm
+gpc edits commit --app com.example.app --edit-id "$EDIT"</code></pre>
+      </figure>
+    </section>
+
+    <!-- Skills -->
+    <section class="section container" id="skills" aria-labelledby="skills-heading">
+      <header class="section-head">
+        <span class="section-index" aria-hidden="true">03</span>
+        <h2 id="skills-heading">AI agent skills, built in</h2>
+      </header>
+      <p class="section-lede">gpc ships three skills that teach coding agents (Claude, Cursor, Codex…) how to set up credentials, sync store listings, and run releases — installed into your agent's skills directory with one command.</p>
+      <div class="skills-grid">
+        <article class="card card--skill">
+          <h3 class="skill-name">gpc-auth-setup</h3>
+          <p>Walks the agent through creating the GCP service account, enabling the Android Publisher API, and wiring credentials.</p>
+        </article>
+        <article class="card card--skill">
+          <h3 class="skill-name">gpc-metadata-sync</h3>
+          <p>Pull, edit offline, validate against Play limits, and push the listing tree in one transaction.</p>
+        </article>
+        <article class="card card--skill">
+          <h3 class="skill-name">gpc-release-flow</h3>
+          <p>Upload a bundle, assign a track, set per-locale notes, publish with staged rollout, monitor status.</p>
+        </article>
+      </div>
+      <div class="cmd cmd--prompt cmd--solo">
+        <pre tabindex="0"><code id="cmd-skills">gpc install-skills</code></pre>
+        <button class="copy-btn" type="button" data-copy="gpc install-skills" data-copy-target="#cmd-skills">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="5.5" y="5.5" width="9" height="9" rx="1.5"/><path d="M10.5 3.5v-1a1.5 1.5 0 0 0-1.5-1.5H3A1.5 1.5 0 0 0 1.5 2.5v6A1.5 1.5 0 0 0 3 10h1"/></svg>
+          <span class="copy-label">Copy</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section container" id="faq" aria-labelledby="faq-heading">
+      <header class="section-head">
+        <span class="section-index" aria-hidden="true">04</span>
+        <h2 id="faq-heading">Frequently asked questions</h2>
+      </header>
+      <div class="faq-list">
+        <details>
+          <summary>How do I install gpc?</summary>
+          <p>With Go 1.26+: 'go install github.com/mickaelfree/google-play-connect/cmd/gpc@latest'. Or clone the repo and run 'make build' — you get a single static binary, no runtime dependencies.</p>
+        </details>
+        <details>
+          <summary>What can gpc automate in Google Play Console?</summary>
+          <p>Store listings and translations, screenshots and store graphics, app bundle uploads, track management, staged rollouts, per-locale release notes, release status, and offline metadata sync — 10 command groups over the official Google Play Developer API.</p>
+        </details>
+        <details>
+          <summary>Does gpc work in CI/CD?</summary>
+          <p>Yes — it's non-interactive by design with deterministic JSON output. Set CI=true to waive interactive confirmation gates and pass credentials via the GPC_SERVICE_ACCOUNT_KEY_JSON environment variable (inline JSON, ideal for CI secrets).</p>
+        </details>
+        <details>
+          <summary>How is gpc different from fastlane supply?</summary>
+          <p>gpc is one Go binary with no Ruby toolchain, exposes the edit-transaction model directly (atomic multi-command batches via --edit-id), validates metadata offline before any API call, and ships agent skills for AI-assisted release workflows.</p>
+        </details>
+        <details>
+          <summary>Is gpc free and open source?</summary>
+          <p>Yes. The full source is on GitHub. It authenticates with your own Google service account — your credentials never leave your machine or CI.</p>
+        </details>
+        <details>
+          <summary>Does gpc support AI agents?</summary>
+          <p>Yes — JSON-first output, non-interactive flags, helpful error messages, and three bundled skills installable with 'gpc install-skills'. An agent can go from zero to a published release without opening a browser.</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- Install CTA -->
+    <section class="section container" aria-labelledby="install-heading">
+      <div class="install-panel">
+        <span class="section-index" aria-hidden="true">05</span>
+        <h2 id="install-heading">Install gpc</h2>
+        <p class="section-lede">One binary. Zero dependencies. Works on Linux and macOS.</p>
+        <div class="cmd-stack">
+          <div class="cmd cmd--prompt">
+            <pre tabindex="0"><code id="cmd-install-go-2">go install github.com/mickaelfree/google-play-connect/cmd/gpc@latest</code></pre>
+            <button class="copy-btn" type="button" data-copy="go install github.com/mickaelfree/google-play-connect/cmd/gpc@latest" data-copy-target="#cmd-install-go-2">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="5.5" y="5.5" width="9" height="9" rx="1.5"/><path d="M10.5 3.5v-1a1.5 1.5 0 0 0-1.5-1.5H3A1.5 1.5 0 0 0 1.5 2.5v6A1.5 1.5 0 0 0 3 10h1"/></svg>
+              <span class="copy-label">Copy</span>
+            </button>
+          </div>
+          <div class="cmd cmd--prompt">
+            <pre tabindex="0"><code id="cmd-install-src-2">git clone https://github.com/mickaelfree/google-play-connect &amp;&amp; cd google-play-connect &amp;&amp; make build</code></pre>
+            <button class="copy-btn" type="button" data-copy="git clone https://github.com/mickaelfree/google-play-connect &amp;&amp; cd google-play-connect &amp;&amp; make build" data-copy-target="#cmd-install-src-2">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="5.5" y="5.5" width="9" height="9" rx="1.5"/><path d="M10.5 3.5v-1a1.5 1.5 0 0 0-1.5-1.5H3A1.5 1.5 0 0 0 1.5 2.5v6A1.5 1.5 0 0 0 3 10h1"/></svg>
+              <span class="copy-label">Copy</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <nav class="footer-links" aria-label="Footer">
+        <a href="https://github.com/mickaelfree/google-play-connect">GitHub</a>
+        <a href="https://github.com/mickaelfree/google-play-connect/blob/master/docs/SETUP.md">Setup guide</a>
+        <a href="https://github.com/mickaelfree/google-play-connect/issues">Report an issue</a>
+      </nav>
+      <p class="footer-meta">© <span id="year"></span> gpc contributors</p>
+      <p class="footer-disclaimer">gpc is an independent open-source tool and is not affiliated with, endorsed by, or sponsored by Google. Google Play and Android are trademarks of Google LLC.</p>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>
