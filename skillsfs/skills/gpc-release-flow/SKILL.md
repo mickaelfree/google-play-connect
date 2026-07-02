@@ -41,11 +41,23 @@ gpc releases publish --app com.example.app --track production \
 # Later: re-run with a higher --rollout, or without it to complete (100%).
 ```
 
+By default, a staged publish (`--rollout` set) fetches the track first and
+RETAINS the release currently marked `completed`, listing it alongside the
+new `inProgress` release — Google requires the previously-live release to
+stay served to the un-rolled-out fraction of users, or those devices lose
+their serving release entirely. Releases in other states (e.g. `halted`)
+are not retained. Pass `--no-retain` to restore the old behavior and
+replace the track's whole release list with just the new release.
+
+A full-rollout publish (no `--rollout`, status `completed`) always replaces
+the whole list — a new completed release supersedes everything — and never
+fetches the track first.
+
 ## Notes
 
 - `--notes-dir` reads `<locale>.txt` files (e.g. `en-US.txt`, `fr-FR.txt`);
   `--notes-file locale=path` overrides a single locale.
 - Tracks: internal, alpha, beta, production (custom track names also work).
 - `--version-codes` must include codes to RETAIN from previous releases when
-  doing staged rollouts on production.
+  doing a full-rollout publish, or a staged publish run with `--no-retain`.
 - In CI set `CI=true` instead of `--confirm`.

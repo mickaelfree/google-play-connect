@@ -136,9 +136,15 @@ These are constraints of the Google Play Developer API itself, not gaps in
   image files. Similarly, `gpc images list` only returns image ids and preview
   URLs to stdout and does not write any files. Local image files you want to
   push must be supplied by you — `pull` won't round-trip them.
-- **`releases publish` replaces the track's whole release list.** `--version-codes`
-  is not additive: it must include every version code you want live on that
-  track after the call, including ones you want to retain from a previous
-  release (e.g. keep an older build serving un-updated devices during a
-  staged rollout). Omitting a previously-live version code removes it from
-  the track.
+- **`releases publish` PUTs the track's whole release list.** `--version-codes`
+  is not additive: the API replaces every release on the track with whatever
+  the request body contains. For a staged publish (`--rollout` set), `gpc`
+  now fetches the track first and automatically retains the release
+  currently marked `completed` alongside the new one by default — Google
+  requires that release to keep serving the un-rolled-out fraction of users.
+  Pass `--no-retain` to opt out and replace the whole list yourself instead;
+  in that case (and for full-rollout publishes, which always replace the
+  whole list) `--version-codes` must include every version code you want
+  live on that track after the call, including any you want to retain from
+  a previous release. Omitting a previously-live version code removes it
+  from the track.

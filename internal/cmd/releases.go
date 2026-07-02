@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -80,6 +82,7 @@ func newReleasesCmd(deps Deps, flags *RootFlags) *cobra.Command {
 	var notesDir string
 	var notesFiles []string
 	var confirm bool
+	var noRetain bool
 
 	publish := &cobra.Command{
 		Use:   "publish",
@@ -121,10 +124,6 @@ func newReleasesCmd(deps Deps, flags *RootFlags) *cobra.Command {
 				VersionCodes: googleapi.Int64s(versionCodes),
 				ReleaseNotes: notes,
 			}
-			trackBody := &androidpublisher.Track{
-				Track:    track,
-				Releases: []*androidpublisher.TrackRelease{release},
-			}
 
 			client, err := deps.NewClient(cmd.Context(), flags.ServiceAccount)
 			if err != nil {
@@ -132,6 +131,38 @@ func newReleasesCmd(deps Deps, flags *RootFlags) *cobra.Command {
 			}
 			var updated *androidpublisher.Track
 			err = client.WithTransaction(cmd.Context(), app, editID, func(id string) error {
+				releases := []*androidpublisher.TrackRelease{release}
+
+				// Staged rollouts leave a completed release serving the
+				// remaining, un-rolled-out fraction of users: Google requires
+				// it to stay listed alongside the new inProgress release, or
+				// those users lose their serving release entirely. Full
+				// rollouts (status completed) supersede everything by
+				// definition, so they never fetch and always replace.
+				if status == playapi.ReleaseStatusInProgress && !noRetain {
+					existing, getErr := client.GetTrack(cmd.Context(), app, id, track)
+					if getErr != nil {
+						var apiErr *googleapi.Error
+						if !errors.As(getErr, &apiErr) || apiErr.Code != http.StatusNotFound {
+							return getErr
+						}
+						// New/empty track: nothing to retain, proceed with
+						// just the new release.
+					} else {
+						retained := make([]*androidpublisher.TrackRelease, 0, len(existing.Releases))
+						for _, r := range existing.Releases {
+							if r.Status == playapi.ReleaseStatusCompleted {
+								retained = append(retained, r)
+							}
+						}
+						releases = append(retained, release)
+					}
+				}
+
+				trackBody := &androidpublisher.Track{
+					Track:    track,
+					Releases: releases,
+				}
 				var inner error
 				updated, inner = client.UpdateTrack(cmd.Context(), app, id, track, trackBody)
 				return inner
@@ -142,11 +173,7 @@ func newReleasesCmd(deps Deps, flags *RootFlags) *cobra.Command {
 			return renderResult(deps, flags, updated,
 				[]string{"TRACK", "STATUS", "VERSION_CODES"},
 				func() [][]string {
-					if len(updated.Releases) == 0 {
-						return [][]string{{updated.Track, "-", "-"}}
-					}
-					r := updated.Releases[0]
-					return [][]string{{updated.Track, r.Status, fmt.Sprint([]int64(r.VersionCodes))}}
+					return [][]string{{updated.Track, release.Status, fmt.Sprint([]int64(release.VersionCodes))}}
 				})
 		},
 	}
@@ -162,6 +189,7 @@ func newReleasesCmd(deps Deps, flags *RootFlags) *cobra.Command {
 	publish.Flags().StringArrayVar(&notesFiles, "notes-file", nil, "release notes as locale=path, repeatable")
 	publish.Flags().StringVar(&editID, "edit-id", "", "reuse an existing edit transaction (no auto-commit)")
 	publish.Flags().BoolVar(&confirm, "confirm", false, "confirm publishing")
+	publish.Flags().BoolVar(&noRetain, "no-retain", false, "staged publishes: replace the track's whole release list instead of retaining the current completed release")
 
 	releasesCmd.AddCommand(publish)
 	return releasesCmd

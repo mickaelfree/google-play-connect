@@ -163,8 +163,22 @@ func TestReleasesPublishRolloutSetsInProgress(t *testing.T) {
 		json.NewEncoder(w).Encode(androidpublisher.AppEdit{Id: "tx"})
 	})
 	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/edits/tx/tracks/production", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			// No GET handler was registered for this track in v0.1.0's test;
+			// with retention-by-default the publish now fetches the track
+			// first. A 404 here (new/empty track) means the new code
+			// proceeds with just the new release, same as before.
+			http.NotFound(w, r)
+			return
+		}
 		var body androidpublisher.Track
-		_ = json.NewDecoder(r.Body).Decode(&body)
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Errorf("decode: %v", err)
+			return
+		}
+		if len(body.Releases) != 1 {
+			t.Errorf("want exactly 1 release (nothing to retain on a 404 track), got %d: %+v", len(body.Releases), body.Releases)
+		}
 		rel := body.Releases[0]
 		if rel.Status != "inProgress" || rel.UserFraction != 0.25 {
 			t.Errorf("rollout release wrong: %+v", rel)
@@ -241,5 +255,151 @@ func TestReleasesPublishExplicitZeroRolloutRejected(t *testing.T) {
 	})
 	if err := root.Execute(); err == nil {
 		t.Fatal("explicit --rollout 0 must be rejected, not silently become a full rollout")
+	}
+}
+
+func TestReleasesPublishStagedRetainsCompleted(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/edits", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(androidpublisher.AppEdit{Id: "tx"})
+	})
+	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/edits/tx/tracks/production", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			json.NewEncoder(w).Encode(androidpublisher.Track{
+				Track: "production",
+				Releases: []*androidpublisher.TrackRelease{
+					{Status: "completed", VersionCodes: googleapi.Int64s{40}},
+					{Status: "halted", VersionCodes: googleapi.Int64s{41}},
+				},
+			})
+			return
+		}
+		var body androidpublisher.Track
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Errorf("decode: %v", err)
+			return
+		}
+		if len(body.Releases) != 2 {
+			t.Errorf("want exactly 2 releases (retained completed + new staged), got %d: %+v", len(body.Releases), body.Releases)
+			json.NewEncoder(w).Encode(body)
+			return
+		}
+		retained, fresh := body.Releases[0], body.Releases[1]
+		if retained.Status != "completed" || len(retained.VersionCodes) != 1 || retained.VersionCodes[0] != 40 {
+			t.Errorf("retained release wrong: %+v", retained)
+		}
+		if fresh.Status != "inProgress" || fresh.UserFraction != 0.25 || len(fresh.VersionCodes) != 1 || fresh.VersionCodes[0] != 42 {
+			t.Errorf("new release wrong: %+v", fresh)
+		}
+		for _, rel := range body.Releases {
+			if rel.Status == "halted" {
+				t.Errorf("halted release must not be retained: %+v", rel)
+			}
+		}
+		json.NewEncoder(w).Encode(body)
+	})
+	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/edits/tx:commit", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(androidpublisher.AppEdit{Id: "tx"})
+	})
+
+	root, _ := newTestRoot(t, mux)
+	root.SetArgs([]string{
+		"releases", "publish",
+		"--app", "com.example.app",
+		"--track", "production",
+		"--version-codes", "42",
+		"--rollout", "0.25",
+		"--confirm",
+	})
+	if err := root.Execute(); err != nil {
+		t.Fatalf("execute: %v", err)
+	}
+}
+
+func TestReleasesPublishStagedNoRetain(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/edits", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(androidpublisher.AppEdit{Id: "tx"})
+	})
+	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/edits/tx/tracks/production", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			json.NewEncoder(w).Encode(androidpublisher.Track{
+				Track: "production",
+				Releases: []*androidpublisher.TrackRelease{
+					{Status: "completed", VersionCodes: googleapi.Int64s{40}},
+					{Status: "halted", VersionCodes: googleapi.Int64s{41}},
+				},
+			})
+			return
+		}
+		var body androidpublisher.Track
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Errorf("decode: %v", err)
+			return
+		}
+		if len(body.Releases) != 1 {
+			t.Errorf("--no-retain must replace the whole list: want exactly 1 release, got %d: %+v", len(body.Releases), body.Releases)
+		}
+		json.NewEncoder(w).Encode(body)
+	})
+	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/edits/tx:commit", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(androidpublisher.AppEdit{Id: "tx"})
+	})
+
+	root, _ := newTestRoot(t, mux)
+	root.SetArgs([]string{
+		"releases", "publish",
+		"--app", "com.example.app",
+		"--track", "production",
+		"--version-codes", "42",
+		"--rollout", "0.25",
+		"--no-retain",
+		"--confirm",
+	})
+	if err := root.Execute(); err != nil {
+		t.Fatalf("execute: %v", err)
+	}
+}
+
+func TestReleasesPublishFullReplacesList(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/edits", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(androidpublisher.AppEdit{Id: "tx"})
+	})
+	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/edits/tx/tracks/production", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			t.Errorf("full rollout publish must not fetch the track")
+			return
+		}
+		var body androidpublisher.Track
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Errorf("decode: %v", err)
+			return
+		}
+		if len(body.Releases) != 1 {
+			t.Errorf("want exactly 1 release for a full rollout, got %d: %+v", len(body.Releases), body.Releases)
+			json.NewEncoder(w).Encode(body)
+			return
+		}
+		rel := body.Releases[0]
+		if rel.Status != "completed" {
+			t.Errorf("full rollout release wrong: %+v", rel)
+		}
+		json.NewEncoder(w).Encode(body)
+	})
+	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/edits/tx:commit", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(androidpublisher.AppEdit{Id: "tx"})
+	})
+
+	root, _ := newTestRoot(t, mux)
+	root.SetArgs([]string{
+		"releases", "publish",
+		"--app", "com.example.app",
+		"--track", "production",
+		"--version-codes", "42",
+		"--confirm",
+	})
+	if err := root.Execute(); err != nil {
+		t.Fatalf("execute: %v", err)
 	}
 }
