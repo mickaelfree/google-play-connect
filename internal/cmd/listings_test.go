@@ -40,6 +40,73 @@ func TestListingsListReadOnly(t *testing.T) {
 	}
 }
 
+func TestListingsGet(t *testing.T) {
+	discarded := false
+	mux := http.NewServeMux()
+	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/edits", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(androidpublisher.AppEdit{Id: "tmp"})
+	})
+	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/edits/tmp/listings/fr-FR", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(androidpublisher.Listing{Language: "fr-FR", Title: "Mon App"})
+	})
+	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/edits/tmp", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodDelete {
+			discarded = true
+		}
+		w.WriteHeader(http.StatusOK)
+	})
+
+	root, out := newTestRoot(t, mux)
+	root.SetArgs([]string{"listings", "get", "--app", "com.example.app", "--locale", "fr-FR"})
+	if err := root.Execute(); err != nil {
+		t.Fatalf("execute: %v", err)
+	}
+	if !bytes.Contains(out.Bytes(), []byte("Mon App")) {
+		t.Fatalf("output missing title: %s", out.String())
+	}
+	if !discarded {
+		t.Fatal("read path must discard its edit")
+	}
+}
+
+func TestListingsDeleteRequiresConfirmAndDeletes(t *testing.T) {
+	root, _ := newTestRoot(t, http.NewServeMux())
+	root.SetArgs([]string{"listings", "delete", "--app", "com.example.app", "--locale", "fr-FR"})
+	if err := root.Execute(); err == nil {
+		t.Fatal("delete without --confirm must fail")
+	}
+
+	deleted := false
+	committed := false
+	mux := http.NewServeMux()
+	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/edits", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(androidpublisher.AppEdit{Id: "tx"})
+	})
+	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/edits/tx/listings/fr-FR", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodDelete {
+			t.Errorf("unexpected method %s", r.Method)
+		}
+		deleted = true
+		w.WriteHeader(http.StatusOK)
+	})
+	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/edits/tx:commit", func(w http.ResponseWriter, r *http.Request) {
+		committed = true
+		json.NewEncoder(w).Encode(androidpublisher.AppEdit{Id: "tx"})
+	})
+
+	root2, _ := newTestRoot(t, mux)
+	root2.SetArgs([]string{"listings", "delete", "--app", "com.example.app", "--locale", "fr-FR", "--confirm"})
+	if err := root2.Execute(); err != nil {
+		t.Fatalf("execute: %v", err)
+	}
+	if !deleted {
+		t.Fatal("listing was not deleted")
+	}
+	if !committed {
+		t.Fatal("delete must commit its transaction")
+	}
+}
+
 func TestListingsUpdateCommitsTransaction(t *testing.T) {
 	committed := false
 	mux := http.NewServeMux()

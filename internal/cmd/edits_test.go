@@ -78,6 +78,22 @@ func TestEditsCommit(t *testing.T) {
 	}
 }
 
+func TestEditsGet(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/edits/edit-9", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(androidpublisher.AppEdit{Id: "edit-9", ExpiryTimeSeconds: "3600"})
+	})
+
+	root, out := newTestRoot(t, mux)
+	root.SetArgs([]string{"edits", "get", "--app", "com.example.app", "--edit-id", "edit-9"})
+	if err := root.Execute(); err != nil {
+		t.Fatalf("execute: %v", err)
+	}
+	if !bytes.Contains(out.Bytes(), []byte("edit-9")) {
+		t.Fatalf("output missing edit id: %s", out.String())
+	}
+}
+
 func TestAppsDetailsUsesReadOnlyEdit(t *testing.T) {
 	discarded := false
 	mux := http.NewServeMux()

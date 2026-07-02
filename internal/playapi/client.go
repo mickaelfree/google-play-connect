@@ -6,9 +6,17 @@ package playapi
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
 
 	androidpublisher "google.golang.org/api/androidpublisher/v3"
 )
+
+// WarnWriter is where non-fatal warnings (currently: failed edit discards)
+// are printed. It defaults to os.Stderr so a failed discard is visible to
+// the operator even though it never changes the command's returned error.
+// Tests may redirect it to capture warnings.
+var WarnWriter io.Writer = os.Stderr
 
 // Client wraps an androidpublisher.Service and is the only type command
 // packages should depend on for talking to the Google Play Developer API.
@@ -70,7 +78,9 @@ func (c *Client) WithTransaction(ctx context.Context, packageName, editID string
 		return err
 	}
 	if err := fn(edit.Id); err != nil {
-		_ = c.DiscardEdit(ctx, packageName, edit.Id)
+		if discardErr := c.DiscardEdit(ctx, packageName, edit.Id); discardErr != nil {
+			fmt.Fprintf(WarnWriter, "warning: failed to discard edit %s for %s: %v\n", edit.Id, packageName, discardErr)
+		}
 		return err
 	}
 	if _, err := c.CommitEdit(ctx, packageName, edit.Id); err != nil {
@@ -87,6 +97,10 @@ func (c *Client) WithReadOnlyEdit(ctx context.Context, packageName string, fn fu
 	if err != nil {
 		return err
 	}
-	defer func() { _ = c.DiscardEdit(ctx, packageName, edit.Id) }()
+	defer func() {
+		if discardErr := c.DiscardEdit(ctx, packageName, edit.Id); discardErr != nil {
+			fmt.Fprintf(WarnWriter, "warning: failed to discard edit %s for %s: %v\n", edit.Id, packageName, discardErr)
+		}
+	}()
 	return fn(edit.Id)
 }

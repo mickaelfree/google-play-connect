@@ -39,6 +39,37 @@ func TestBundlesUpload(t *testing.T) {
 	}
 }
 
+func TestBundlesList(t *testing.T) {
+	discarded := false
+	mux := http.NewServeMux()
+	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/edits", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(androidpublisher.AppEdit{Id: "tmp"})
+	})
+	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/edits/tmp/bundles", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(androidpublisher.BundlesListResponse{
+			Bundles: []*androidpublisher.Bundle{{VersionCode: 7, Sha256: "def456"}},
+		})
+	})
+	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/edits/tmp", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodDelete {
+			discarded = true
+		}
+		w.WriteHeader(http.StatusOK)
+	})
+
+	root, out := newTestRoot(t, mux)
+	root.SetArgs([]string{"bundles", "list", "--app", "com.example.app"})
+	if err := root.Execute(); err != nil {
+		t.Fatalf("execute: %v", err)
+	}
+	if !bytes.Contains(out.Bytes(), []byte("7")) {
+		t.Fatalf("output missing version code: %s", out.String())
+	}
+	if !discarded {
+		t.Fatal("read path must discard its edit")
+	}
+}
+
 func TestStatusListsReleaseSummaries(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/androidpublisher/v3/applications/com.example.app/tracks/production/releases", func(w http.ResponseWriter, r *http.Request) {
